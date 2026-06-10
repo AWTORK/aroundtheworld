@@ -670,9 +670,10 @@ function subscribeToChanges(){
 const POLL_OPTIONS = [
   { key: 'june12',  label: 'June 12th' },
   { key: 'june14',  label: 'June 14th' },
+  { key: 'june28',  label: 'June 28th' },
   { key: 'july12',  label: 'July 12th' },
 ];
-let pollCounts = { june12: 0, june14: 0, july12: 0 };
+let pollCounts = { june12: 0, june14: 0, june28: 0, july12: 0 };
 let myVote = null;
 
 function openPollDrawer(){ renderPoll(); document.getElementById('pollOverlay').classList.add('open'); document.getElementById('pollDrawer').classList.add('open'); }
@@ -711,7 +712,7 @@ async function submitVote(key){
 async function loadPollVotes(){
   const { data, error } = await sb.from('poll_votes').select('date_option');
   if(!error && data){
-    pollCounts = { june12:0, june14:0, july12:0 };
+    pollCounts = { june12:0, june14:0, june28:0, july12:0 };
     data.forEach(r=>{ if(pollCounts[r.date_option]!==undefined) pollCounts[r.date_option]++; });
   }
 }
