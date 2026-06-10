@@ -340,6 +340,75 @@ html,body {
 .drawer-empty span { font-size:50px; display:block; margin-bottom:10px; }
 .drawer-empty p { font-weight:800; font-size:15px; }
 
+/* ── POLL BUTTON ── */
+.poll-btn {
+  position: fixed;
+  top: 14px; right: 14px;
+  z-index: 50;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255,255,255,0.95);
+  border-radius: 50px;
+  padding: 8px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: #1e1e4a;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(100,80,200,0.12);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.poll-btn:active { transform: scale(0.95); }
+
+/* ── POLL DRAWER ── */
+.poll-drawer {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%) translateY(104%);
+  width: 100%; max-width: 430px;
+  background: white;
+  border-radius: 30px 30px 0 0;
+  z-index: 101;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.34,1.1,0.64,1);
+  box-shadow: 0 -6px 40px rgba(44,44,108,0.14);
+}
+.poll-drawer.open { transform: translateX(-50%) translateY(0); }
+.poll-scroll { overflow-y: auto; padding: 16px 16px 40px; scrollbar-width: none; }
+.poll-scroll::-webkit-scrollbar { display: none; }
+
+.poll-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #faf8ff;
+  border: 2px solid #eeeaf8;
+  border-radius: 18px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.poll-option.voted-this { border-color: #4ECDC4; background: #f0fffe; }
+.poll-option-top { display: flex; align-items: center; justify-content: space-between; }
+.po-date { font-family: 'Fredoka One', cursive; font-size: 18px; color: #1e1e4a; }
+.po-right { display: flex; align-items: center; gap: 8px; }
+.po-count { font-size: 12px; font-weight: 800; color: #a0a0c0; }
+.po-check { font-size: 18px; display: none; }
+.poll-option.voted-this .po-check { display: block; }
+.poll-option.voted-this .po-count { color: #4ECDC4; }
+.po-bar-wrap { height: 8px; background: #eeeaf8; border-radius: 4px; overflow: hidden; }
+.po-bar { height: 100%; background: linear-gradient(90deg, #4ECDC4, #74B9FF); border-radius: 4px; transition: width 0.4s ease; }
+.poll-option.voted-this .po-bar { background: linear-gradient(90deg, #4ECDC4, #6BCB77); }
+
 /* ── CONFETTI ── */
 .cw { position:fixed; inset:0; pointer-events:none; z-index:300; overflow:hidden; }
 .cp { position:absolute; top:-20px; animation:cfall linear forwards; opacity:0; }
@@ -407,6 +476,20 @@ html,body {
     </button>
   </div>
 
+</div>
+
+<!-- POLL BUTTON -->
+<button class="poll-btn" onclick="openPollDrawer()">📅 Pick a Date</button>
+
+<!-- POLL DRAWER -->
+<div class="overlay" id="pollOverlay" onclick="closePollDrawer()"></div>
+<div class="poll-drawer" id="pollDrawer">
+  <div class="drawer-pill"></div>
+  <div class="drawer-head">
+    <span class="drawer-title">📅 Pick a Date</span>
+    <span class="drawer-sub" id="pollTotal">0 votes</span>
+  </div>
+  <div class="poll-scroll" id="pollList"></div>
 </div>
 
 <!-- DRAWER -->
@@ -583,12 +666,74 @@ function subscribeToChanges(){
     .subscribe();
 }
 
+// ── POLL ──
+const POLL_OPTIONS = [
+  { key: 'june12',  label: 'June 12th' },
+  { key: 'june14',  label: 'June 14th' },
+  { key: 'july12',  label: 'July 12th' },
+];
+let pollCounts = { june12: 0, june14: 0, july12: 0 };
+let myVote = null;
+
+function openPollDrawer(){ renderPoll(); document.getElementById('pollOverlay').classList.add('open'); document.getElementById('pollDrawer').classList.add('open'); }
+function closePollDrawer(){ document.getElementById('pollOverlay').classList.remove('open'); document.getElementById('pollDrawer').classList.remove('open'); }
+
+function renderPoll(){
+  myVote = localStorage.getItem('atw_poll_vote');
+  const total = Object.values(pollCounts).reduce((a,b)=>a+b,0);
+  document.getElementById('pollTotal').textContent = `${total} vote${total!==1?'s':''}`;
+  document.getElementById('pollList').innerHTML = POLL_OPTIONS.map(o=>{
+    const count = pollCounts[o.key]||0;
+    const pct = total ? Math.round(count/total*100) : 0;
+    const isMe = myVote===o.key;
+    return `<div class="poll-option${isMe?' voted-this':''}" onclick="submitVote('${o.key}')">
+      <div class="poll-option-top">
+        <span class="po-date">${o.label}</span>
+        <div class="po-right">
+          <span class="po-count">${count} vote${count!==1?'s':''} · ${pct}%</span>
+          <span class="po-check">✅</span>
+        </div>
+      </div>
+      <div class="po-bar-wrap"><div class="po-bar" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+async function submitVote(key){
+  if(myVote) return;
+  const { error } = await sb.from('poll_votes').insert({ date_option: key });
+  if(error){ console.error('Poll vote error:', error); return; }
+  localStorage.setItem('atw_poll_vote', key);
+  pollCounts[key] = (pollCounts[key]||0) + 1;
+  renderPoll();
+}
+
+async function loadPollVotes(){
+  const { data, error } = await sb.from('poll_votes').select('date_option');
+  if(!error && data){
+    pollCounts = { june12:0, june14:0, july12:0 };
+    data.forEach(r=>{ if(pollCounts[r.date_option]!==undefined) pollCounts[r.date_option]++; });
+  }
+}
+
+function subscribeToPoll(){
+  sb.channel('poll-channel')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'poll_votes'},(payload)=>{
+      const key = payload.new.date_option;
+      if(pollCounts[key]!==undefined) pollCounts[key]++;
+      if(document.getElementById('pollDrawer').classList.contains('open')) renderPoll();
+    })
+    .subscribe();
+}
+
 async function init(){
   const { data, error } = await sb.from('claims').select('name,country,flag').order('created_at');
   if(!error && data) claims=data;
   buildDrum();
   updateBadge();
   subscribeToChanges();
+  await loadPollVotes();
+  subscribeToPoll();
 }
 
 init();
