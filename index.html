@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Around the World 🌍</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html,body {
+  height: 100%;
+  font-family: 'Nunito', sans-serif;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+/* ── SHAPES BG ── */
+.shapes {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.s { position: absolute; }
+
+/* big circles */
+.sc1{width:160px;height:160px;border-radius:50%;background:#FF6B6B;opacity:0.18;top:-55px;left:-45px}
+.sc2{width:110px;height:110px;border-radius:50%;background:#FFD93D;opacity:0.22;top:55px;right:-30px}
+.sc3{width:80px;height:80px;border-radius:50%;background:#4ECDC4;opacity:0.2;bottom:25%;left:-22px}
+.sc4{width:60px;height:60px;border-radius:50%;background:#6BCB77;opacity:0.24;bottom:18%;right:18px}
+.sc5{width:130px;height:130px;border-radius:50%;background:#A29BFE;opacity:0.15;bottom:-40px;right:-35px}
+
+/* rings */
+.sr1{width:100px;height:100px;border-radius:50%;border:14px solid #fd79a8;opacity:0.22;top:22%;right:-20px}
+.sr2{width:70px;height:70px;border-radius:50%;border:10px solid #74B9FF;opacity:0.25;bottom:30%;left:-12px}
+
+/* triangles (CSS border trick) */
+.st1{width:0;height:0;border-left:38px solid transparent;border-right:38px solid transparent;border-bottom:64px solid #FFD93D;opacity:0.2;top:38%;right:14px;transform:rotate(12deg)}
+.st2{width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;border-bottom:44px solid #FF6B6B;opacity:0.18;bottom:38%;left:12px;transform:rotate(-15deg)}
+
+/* rounded squares */
+.sq1{width:52px;height:52px;background:#4ECDC4;opacity:0.18;border-radius:12px;top:48%;right:12px;transform:rotate(20deg)}
+.sq2{width:36px;height:36px;background:#A29BFE;opacity:0.22;border-radius:8px;top:15%;left:16px;transform:rotate(-14deg)}
+.sq3{width:44px;height:44px;background:#6BCB77;opacity:0.18;border-radius:10px;bottom:12%;left:20px;transform:rotate(10deg)}
+
+/* pill/rectangle */
+.sp1{width:68px;height:24px;background:#fd79a8;opacity:0.2;border-radius:12px;bottom:42%;right:-10px;transform:rotate(-18deg)}
+
+/* ── PAGE: full height, centered column ── */
+.page {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 390px;
+  margin: 0 auto;
+  padding: 0 18px;
+  gap: 0;
+  padding-top: 40px;
+}
+
+/* ── HEADER ── */
+.header {
+  width: 100%;
+  text-align: center;
+  padding-bottom: 20px;
+  flex-shrink: 0;
+}
+.h-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #4ECDC4;
+  margin-bottom: 4px;
+}
+.h-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 32px;
+  line-height: 1.05;
+  color: #1e1e4a;
+}
+.h-title em { color: #FF6B6B; font-style: normal; }
+.h-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a0a0c0;
+  margin-top: 3px;
+}
+
+/* ── WHEEL CARD ── */
+.wheel-card {
+  width: 100%;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 2px solid rgba(255,255,255,0.95);
+  border-radius: 30px;
+  box-shadow: 0 8px 40px rgba(100,80,200,0.1), 0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── DRUM ── */
+.drum-wrap {
+  position: relative;
+  height: 240px;
+  overflow: hidden;
+}
+.drum-wrap::before,
+.drum-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 72px;
+  z-index: 10;
+  pointer-events: none;
+}
+.drum-wrap::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+.drum-wrap::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+.drum {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  will-change: transform;
+}
+.slot {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(162,155,254,0.08);
+  flex-shrink: 0;
+}
+.slot-flag { font-size: 24px; flex-shrink: 0; line-height: 1; }
+.slot-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 19px;
+  color: #1e1e4a;
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+.slot-bar {
+  width: 9px;
+  height: 32px;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+/* center pointer */
+.pointer {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 58px;
+  z-index: 20;
+  pointer-events: none;
+}
+.ptr-fill { position: absolute; inset: 0; background: rgba(255,107,107,0.05); }
+.ptr-top  { position: absolute; top: 0; left: 14px; right: 14px; height: 2.5px; background: linear-gradient(90deg, transparent, #FF6B6B 20%, #FF6B6B 80%, transparent); border-radius: 2px; }
+.ptr-bot  { position: absolute; bottom: 0; left: 14px; right: 14px; height: 2.5px; background: linear-gradient(90deg, transparent, #FF6B6B 20%, #FF6B6B 80%, transparent); border-radius: 2px; }
+.ptr-l    { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 11px solid transparent; border-bottom: 11px solid transparent; border-left: 18px solid #FF6B6B; }
+.ptr-r    { position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 11px solid transparent; border-bottom: 11px solid transparent; border-right: 18px solid #FF6B6B; }
+
+/* name + spin row */
+.wheel-footer {
+  padding: 14px 18px 16px;
+  border-top: 1.5px solid rgba(162,155,254,0.12);
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.name-input {
+  flex: 1;
+  padding: 13px 15px;
+  border: 2px solid #eae7f8;
+  border-radius: 15px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e1e4a;
+  background: rgba(255,255,255,0.8);
+  outline: none;
+  transition: border-color 0.18s;
+  -webkit-appearance: none;
+}
+.name-input:focus { border-color: #4ECDC4; }
+.name-input::placeholder { color: #c4c0da; }
+.name-input.shake { border-color: #FF6B6B; animation: shake 0.28s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+.spin-btn {
+  background: linear-gradient(135deg, #FF6B6B, #ff9055);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 13px 20px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.36);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+}
+.spin-btn:active { transform: scale(0.93); }
+.spin-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── RESULT CARD ── */
+.result-card {
+  display: none;
+  width: 100%;
+  background: linear-gradient(135deg, #2C2C6C, #3d3d96);
+  border-radius: 24px;
+  padding: 20px 22px;
+  color: white;
+  text-align: center;
+  margin-top: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(44,44,108,0.2);
+  flex-shrink: 0;
+}
+.result-card::before { content:''; position:absolute; top:-50px; right:-50px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.04); }
+.result-card.show { display: block; animation: popIn 0.38s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes popIn { from{opacity:0;transform:scale(0.82) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.rc-who { font-size:11px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#FFD93D; margin-bottom:6px; }
+.rc-flag { font-size:48px; display:block; line-height:1; margin:0 0 6px; }
+.rc-country { font-family:'Fredoka One',cursive; font-size:32px; letter-spacing:0.4px; }
+.rc-hint { font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-top:6px; }
+
+/* ── CLAIMED BUTTON (bottom) ── */
+.claimed-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+  flex-shrink: 0;
+}
+.claimed-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(255,255,255,0.95);
+  border-radius: 50px;
+  padding: 11px 22px;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #1e1e4a;
+  box-shadow: 0 4px 20px rgba(100,80,200,0.12);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s;
+}
+.claimed-btn:active { transform: scale(0.96); }
+.badge {
+  background: #FF6B6B;
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+/* ── DRAWER ── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(30,30,74,0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 100;
+}
+.overlay.open { display: block; }
+
+.drawer {
+  position: fixed;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%) translateY(104%);
+  width: 100%; max-width: 430px;
+  background: white;
+  border-radius: 30px 30px 0 0;
+  z-index: 101;
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.34,1.1,0.64,1);
+  box-shadow: 0 -6px 40px rgba(44,44,108,0.14);
+}
+.drawer.open { transform: translateX(-50%) translateY(0); }
+
+.drawer-pill { width:36px; height:4px; background:#ddd8ef; border-radius:2px; margin:12px auto 0; flex-shrink:0; }
+.drawer-head { padding:13px 22px 14px; border-bottom:1.5px solid #f0edf8; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; }
+.drawer-title { font-family:'Fredoka One',cursive; font-size:22px; color:#1e1e4a; }
+.drawer-sub { font-size:13px; font-weight:700; color:#a0a0c0; }
+
+.drawer-scroll { overflow-y:auto; padding:12px 16px 36px; -webkit-overflow-scrolling:touch; }
+
+.claim-item { display:flex; align-items:center; gap:12px; padding:12px 14px; background:#faf8ff; border:1.5px solid #eeeaf8; border-radius:18px; margin-bottom:8px; }
+.ci-flag { font-size:26px; flex-shrink:0; }
+.ci-info { flex:1; min-width:0; }
+.ci-country { font-family:'Fredoka One',cursive; font-size:17px; color:#1e1e4a; }
+.ci-person { font-size:12px; font-weight:700; color:#a0a0c0; }
+.ci-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+.drawer-empty { text-align:center; padding:50px 20px; color:#c0bcd8; }
+.drawer-empty span { font-size:50px; display:block; margin-bottom:10px; }
+.drawer-empty p { font-weight:800; font-size:15px; }
+
+/* ── CONFETTI ── */
+.cw { position:fixed; inset:0; pointer-events:none; z-index:300; overflow:hidden; }
+.cp { position:absolute; top:-20px; animation:cfall linear forwards; opacity:0; }
+@keyframes cfall { 0%{opacity:1;transform:translateY(0) rotate(0deg)} 80%{opacity:1} 100%{opacity:0;transform:translateY(106vh) rotate(560deg)} }
+</style>
+</head>
+<body>
+
+<!-- SHAPES -->
+<div class="shapes">
+  <div class="s sc1"></div><div class="s sc2"></div><div class="s sc3"></div>
+  <div class="s sc4"></div><div class="s sc5"></div>
+  <div class="s sr1"></div><div class="s sr2"></div>
+  <div class="s st1"></div><div class="s st2"></div>
+  <div class="s sq1"></div><div class="s sq2"></div><div class="s sq3"></div>
+  <div class="s sp1"></div>
+</div>
+
+<div class="cw" id="cw"></div>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="h-eyebrow">July 11th · Chicago 🌆</div>
+    <div class="h-title">Around the <em>World</em> 🌍</div>
+    <div class="h-sub">Alex & Luke's · One spin, one country</div>
+  </div>
+
+  <!-- WHEEL -->
+  <div class="wheel-card">
+    <div class="drum-wrap">
+      <div class="drum" id="drum"></div>
+      <div class="pointer">
+        <div class="ptr-fill"></div>
+        <div class="ptr-top"></div>
+        <div class="ptr-bot"></div>
+        <div class="ptr-l"></div>
+        <div class="ptr-r"></div>
+      </div>
+    </div>
+    <div class="wheel-footer">
+      <div class="input-row">
+        <input type="text" class="name-input" id="nameInput"
+          placeholder="Your name…" maxlength="30"
+          autocomplete="off" autocorrect="off" autocapitalize="words">
+        <button class="spin-btn" id="spinBtn" onclick="startSpin()">SPIN! 🎲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard">
+    <div class="rc-who" id="rcWho"></div>
+    <span class="rc-flag" id="rcFlag"></span>
+    <div class="rc-country" id="rcCountry"></div>
+    <div class="rc-hint">Make one dish from this country 🍽️</div>
+  </div>
+
+  <!-- CLAIMED BUTTON -->
+  <div class="claimed-row">
+    <button class="claimed-btn" onclick="openDrawer()">
+      🗺️ View Claimed Countries
+      <span class="badge" id="claimCount">0</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-pill"></div>
+  <div class="drawer-head">
+    <span class="drawer-title">🗺️ Countries Claimed</span>
+    <span class="drawer-sub" id="drawerSub">0 spun</span>
+  </div>
+  <div class="drawer-scroll" id="claimsList"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xyjihctdvyetfpvpeuvq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_PrGTPxcQHxkU_V3XFftPDQ_AT7ZHzzX';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ALL = [
+  {n:"Afghanistan",f:"🇦🇫"},{n:"Albania",f:"🇦🇱"},{n:"Algeria",f:"🇩🇿"},
+  {n:"Argentina",f:"🇦🇷"},{n:"Armenia",f:"🇦🇲"},{n:"Australia",f:"🇦🇺"},
+  {n:"Austria",f:"🇦🇹"},{n:"Azerbaijan",f:"🇦🇿"},{n:"Bangladesh",f:"🇧🇩"},
+  {n:"Belarus",f:"🇧🇾"},{n:"Belgium",f:"🇧🇪"},{n:"Bolivia",f:"🇧🇴"},
+  {n:"Bosnia",f:"🇧🇦"},{n:"Brazil",f:"🇧🇷"},{n:"Bulgaria",f:"🇧🇬"},
+  {n:"Cambodia",f:"🇰🇭"},{n:"Cameroon",f:"🇨🇲"},{n:"Canada",f:"🇨🇦"},
+  {n:"Chile",f:"🇨🇱"},{n:"China",f:"🇨🇳"},{n:"Colombia",f:"🇨🇴"},
+  {n:"Croatia",f:"🇭🇷"},{n:"Cuba",f:"🇨🇺"},{n:"Czech Republic",f:"🇨🇿"},
+  {n:"Denmark",f:"🇩🇰"},{n:"Ecuador",f:"🇪🇨"},{n:"Egypt",f:"🇪🇬"},
+  {n:"Ethiopia",f:"🇪🇹"},{n:"Finland",f:"🇫🇮"},{n:"France",f:"🇫🇷"},
+  {n:"Georgia",f:"🇬🇪"},{n:"Germany",f:"🇩🇪"},{n:"Ghana",f:"🇬🇭"},
+  {n:"Greece",f:"🇬🇷"},{n:"Guatemala",f:"🇬🇹"},{n:"Hungary",f:"🇭🇺"},
+  {n:"Iceland",f:"🇮🇸"},{n:"India",f:"🇮🇳"},{n:"Indonesia",f:"🇮🇩"},
+  {n:"Iran",f:"🇮🇷"},{n:"Iraq",f:"🇮🇶"},{n:"Ireland",f:"🇮🇪"},
+  {n:"Israel",f:"🇮🇱"},{n:"Italy",f:"🇮🇹"},{n:"Jamaica",f:"🇯🇲"},
+  {n:"Japan",f:"🇯🇵"},{n:"Jordan",f:"🇯🇴"},{n:"Kazakhstan",f:"🇰🇿"},
+  {n:"Kenya",f:"🇰🇪"},{n:"South Korea",f:"🇰🇷"},{n:"Kuwait",f:"🇰🇼"},
+  {n:"Laos",f:"🇱🇦"},{n:"Latvia",f:"🇱🇻"},{n:"Lebanon",f:"🇱🇧"},
+  {n:"Lithuania",f:"🇱🇹"},{n:"Malaysia",f:"🇲🇾"},{n:"Mexico",f:"🇲🇽"},
+  {n:"Moldova",f:"🇲🇩"},{n:"Mongolia",f:"🇲🇳"},{n:"Morocco",f:"🇲🇦"},
+  {n:"Myanmar",f:"🇲🇲"},{n:"Nepal",f:"🇳🇵"},{n:"Netherlands",f:"🇳🇱"},
+  {n:"New Zealand",f:"🇳🇿"},{n:"Nicaragua",f:"🇳🇮"},{n:"Nigeria",f:"🇳🇬"},
+  {n:"Norway",f:"🇳🇴"},{n:"Pakistan",f:"🇵🇰"},{n:"Panama",f:"🇵🇦"},
+  {n:"Paraguay",f:"🇵🇾"},{n:"Peru",f:"🇵🇪"},{n:"Philippines",f:"🇵🇭"},
+  {n:"Poland",f:"🇵🇱"},{n:"Portugal",f:"🇵🇹"},{n:"Romania",f:"🇷🇴"},
+  {n:"Russia",f:"🇷🇺"},{n:"Saudi Arabia",f:"🇸🇦"},{n:"Senegal",f:"🇸🇳"},
+  {n:"Serbia",f:"🇷🇸"},{n:"Singapore",f:"🇸🇬"},{n:"Slovakia",f:"🇸🇰"},
+  {n:"South Africa",f:"🇿🇦"},{n:"Spain",f:"🇪🇸"},{n:"Sri Lanka",f:"🇱🇰"},
+  {n:"Sweden",f:"🇸🇪"},{n:"Switzerland",f:"🇨🇭"},{n:"Taiwan",f:"🇹🇼"},
+  {n:"Tanzania",f:"🇹🇿"},{n:"Thailand",f:"🇹🇭"},{n:"Tunisia",f:"🇹🇳"},
+  {n:"Turkey",f:"🇹🇷"},{n:"Uganda",f:"🇺🇬"},{n:"Ukraine",f:"🇺🇦"},
+  {n:"UAE",f:"🇦🇪"},{n:"United Kingdom",f:"🇬🇧"},{n:"USA",f:"🇺🇸"},
+  {n:"Uruguay",f:"🇺🇾"},{n:"Uzbekistan",f:"🇺🇿"},{n:"Venezuela",f:"🇻🇪"},
+  {n:"Vietnam",f:"🇻🇳"},{n:"Yemen",f:"🇾🇪"},{n:"Zimbabwe",f:"🇿🇼"}
+];
+
+const COLORS=["#FF6B6B","#FFD93D","#6BCB77","#4ECDC4","#74B9FF","#A29BFE","#fd79a8","#FDCB6E","#55efc4","#e17055"];
+const SLOT_H=56;
+let claims=[],spinning=false,drumY=0;
+
+function remaining(){const t=new Set(claims.map(c=>c.country));return ALL.filter(c=>!t.has(c.n));}
+
+function buildDrum(){
+  const list=remaining();
+  const drum=document.getElementById('drum');
+  if(!list.length){drum.innerHTML='<div style="height:240px;display:flex;align-items:center;justify-content:center;font-family:Fredoka One,cursive;font-size:20px;color:#a0a0c0">All countries claimed! 🌍</div>';return;}
+  const rows=[...list,...list,...list];
+  drum.innerHTML=rows.map((c,i)=>`
+    <div class="slot">
+      <span class="slot-flag">${c.f}</span>
+      <span class="slot-name">${c.n}</span>
+      <span class="slot-bar" style="background:${COLORS[i%COLORS.length]}"></span>
+    </div>`).join('');
+  const si=Math.floor(Math.random()*list.length);
+  drumY=-(list.length*SLOT_H)-(si*SLOT_H)+120-(SLOT_H/2);
+  drum.style.transform=`translateY(${drumY}px)`;
+}
+
+function startSpin(){
+  const name=document.getElementById('nameInput').value.trim();
+  if(!name){
+    const inp=document.getElementById('nameInput');
+    inp.classList.add('shake');inp.focus();
+    setTimeout(()=>inp.classList.remove('shake'),400);
+    return;
+  }
+  if(spinning)return;
+  const list=remaining();
+  if(!list.length){alert('🌍 All countries have been claimed!');return;}
+  spinning=true;
+  document.getElementById('spinBtn').disabled=true;
+  document.getElementById('resultCard').classList.remove('show');
+
+  const winIdx=Math.floor(Math.random()*list.length);
+  const winner=list[winIdx];
+  const listH=list.length*SLOT_H;
+  const rolls=4+Math.floor(Math.random()*4);
+  const finalY=-(list.length*SLOT_H)-(winIdx*SLOT_H)+120-(SLOT_H/2)-rolls*listH;
+  const startY=drumY,dist=finalY-startY;
+  const dur=3000+rolls*120,t0=performance.now();
+
+  schedTicks(list.length,rolls,dur);
+  function ease(t){return 1-Math.pow(1-t,4);}
+  function tick(now){
+    const p=Math.min((now-t0)/dur,1);
+    drumY=startY+dist*ease(p);
+    document.getElementById('drum').style.transform=`translateY(${drumY}px)`;
+    if(p<1)requestAnimationFrame(tick);
+    else{drumY=finalY;document.getElementById('drum').style.transform=`translateY(${drumY}px)`;spinning=false;document.getElementById('spinBtn').disabled=false;onLand(name,winner);}
+  }
+  requestAnimationFrame(tick);
+}
+
+async function onLand(name,winner){
+  const { error } = await sb.from('claims').insert({ name, country: winner.n, flag: winner.f });
+  if(error){ console.error('Save error:', error); return; }
+
+  claims.push({name,country:winner.n,flag:winner.f});
+  updateBadge();
+  document.getElementById('rcWho').textContent=`${name} got…`;
+  document.getElementById('rcFlag').textContent=winner.f;
+  document.getElementById('rcCountry').textContent=winner.n;
+  document.getElementById('resultCard').classList.add('show');
+  document.getElementById('nameInput').value='';
+  confetti();
+  setTimeout(()=>buildDrum(),250);
+}
+
+let actx=null;
+function ga(){if(!actx)try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}return actx;}
+function playTick(t){const c=ga();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=1000;g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.03);o.start(t);o.stop(t+0.04);}
+function schedTicks(ll,rolls,dur){const c=ga();if(!c)return;const total=ll*(rolls+1),base=c.currentTime+0.04;function ease(t){return 1-Math.pow(1-t,4);}for(let i=1;i<=total;i++){let lo=0,hi=1;for(let j=0;j<18;j++){const m=(lo+hi)/2;ease(m)*total<i?lo=m:hi=m;}playTick(base+(lo+hi)/2*(dur/1000));}}
+
+function openDrawer(){renderClaims();document.getElementById('overlay').classList.add('open');document.getElementById('drawer').classList.add('open');}
+function closeDrawer(){document.getElementById('overlay').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+function renderClaims(){
+  const el=document.getElementById('claimsList');
+  if(!claims.length){el.innerHTML='<div class="drawer-empty"><span>🌐</span><p>No one has spun yet!</p></div>';return;}
+  el.innerHTML=claims.map((c,i)=>`
+    <div class="claim-item">
+      <span class="ci-flag">${c.flag}</span>
+      <div class="ci-info"><div class="ci-country">${c.country}</div><div class="ci-person">👤 ${c.name}</div></div>
+      <div class="ci-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+    </div>`).join('');
+}
+function updateBadge(){const n=claims.length;document.getElementById('claimCount').textContent=n;document.getElementById('drawerSub').textContent=`${n} spun`;}
+
+function confetti(){
+  const w=document.getElementById('cw');
+  const cols=['#FF6B6B','#FFD93D','#6BCB77','#4ECDC4','#74B9FF','#A29BFE','#fd79a8','#FDCB6E'];
+  const sh=['◆','●','▲','■','★'];
+  for(let i=0;i<65;i++){
+    const el=document.createElement('div');
+    el.className='cp';
+    el.textContent=sh[i%sh.length];
+    el.style.cssText=`left:${Math.random()*100}vw;color:${cols[i%cols.length]};font-size:${9+Math.random()*13}px;animation-duration:${1.8+Math.random()*1.6}s;animation-delay:${Math.random()*0.35}s;`;
+    w.appendChild(el);
+    setTimeout(()=>el.remove(),3600);
+  }
+}
+
+// Subscribe to real-time inserts so every open tab/device stays in sync
+function subscribeToChanges(){
+  sb.channel('claims-channel')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'claims'},(payload)=>{
+      const r=payload.new;
+      if(!claims.find(c=>c.country===r.country)){
+        claims.push({name:r.name,country:r.country,flag:r.flag});
+        updateBadge();
+        buildDrum();
+        const el=document.getElementById('claimsList');
+        if(el && document.getElementById('drawer').classList.contains('open')) renderClaims();
+      }
+    })
+    .subscribe();
+}
+
+async function init(){
+  const { data, error } = await sb.from('claims').select('name,country,flag').order('created_at');
+  if(!error && data) claims=data;
+  buildDrum();
+  updateBadge();
+  subscribeToChanges();
+}
+
+init();
+</script>
+</body>
+</html>
