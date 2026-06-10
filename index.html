@@ -234,11 +234,11 @@ html,body {
   display: none;
   width: 100%;
   background: linear-gradient(135deg, #2C2C6C, #3d3d96);
-  border-radius: 24px;
-  padding: 20px 22px;
+  border-radius: 20px;
+  padding: 12px 18px;
   color: white;
   text-align: center;
-  margin-top: 12px;
+  margin-top: 8px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(44,44,108,0.2);
@@ -247,17 +247,17 @@ html,body {
 .result-card::before { content:''; position:absolute; top:-50px; right:-50px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.04); }
 .result-card.show { display: block; animation: popIn 0.38s cubic-bezier(0.34,1.56,0.64,1); }
 @keyframes popIn { from{opacity:0;transform:scale(0.82) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
-.rc-who { font-size:11px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#FFD93D; margin-bottom:6px; }
-.rc-flag { font-size:48px; display:block; line-height:1; margin:0 0 6px; }
-.rc-country { font-family:'Fredoka One',cursive; font-size:32px; letter-spacing:0.4px; }
-.rc-hint { font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-top:6px; }
+.rc-who { font-size:10px; font-weight:900; letter-spacing:2.5px; text-transform:uppercase; color:#FFD93D; margin-bottom:4px; }
+.rc-flag { font-size:36px; display:block; line-height:1; margin:0 0 4px; }
+.rc-country { font-family:'Fredoka One',cursive; font-size:26px; letter-spacing:0.4px; }
+.rc-hint { font-size:11px; font-weight:700; color:rgba(255,255,255,0.4); margin-top:4px; }
 
 /* ── CLAIMED BUTTON (bottom) ── */
 .claimed-row {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding-top: 14px;
+  padding-top: 8px;
   flex-shrink: 0;
 }
 .claimed-btn {
@@ -471,7 +471,7 @@ function buildDrum(){
   const list=remaining();
   const drum=document.getElementById('drum');
   if(!list.length){drum.innerHTML='<div style="height:240px;display:flex;align-items:center;justify-content:center;font-family:Fredoka One,cursive;font-size:20px;color:#a0a0c0">All countries claimed! 🌍</div>';return;}
-  const rows=[...list,...list,...list];
+  const rows=Array(12).fill(list).flat();
   drum.innerHTML=rows.map((c,i)=>`
     <div class="slot">
       <span class="slot-flag">${c.f}</span>
